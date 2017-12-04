@@ -1,0 +1,71 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "“40k API”",
+    "description": "“API for 40k ranking“",
+    "version": "“0.1”"
+  },
+  "host": "echellons40k",
+  "schemes": [
+    "https"
+  ],
+  "basePath": "/api",
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/classement": {
+      "get": {
+        "summary": "show board",
+        "description": "return the ranking board",
+        "responses": {
+          "200": {
+            "description": "List of players by ranking order",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/joueur"
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "joueur": {
+      "type": "object",
+      "properties": {
+        "nom": {
+          "type": "string",
+          "description": "Name of the customer"
+        },
+        "armee": {
+          "type": "string",
+          "description": "Army Name"
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
