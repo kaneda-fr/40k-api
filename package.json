@@ -1,0 +1,29 @@
+{
+  "name": "40k-api",
+  "version": "0.0.2",
+  "author": {
+    "name": "Sebastien Lacoste-Seris"
+  },
+  "description": "API for 40k ranking",
+  "main": "index.js",
+  "scripts": {
+	"prestart": "npm install",
+	"start": "supervisor index.js"
+  },
+  "keywords": [
+    "swagger"
+  ],
+  "license": "GPL",
+  "private": true,
+  "dependencies": {
+    "connect": "^3.2.0",
+    "js-yaml": "^3.3.0",
+    "swagger-tools": "0.10.1",
+    "mongoose": ">= 3.8.x",
+    "util": "^0.10.3",
+    "colors": ">= 0.6.x",
+    "supervisor": ">=0.12.0",
+    "swagger-mongoose": ">=1.1.2",
+    "rand-token": "latest"
+  }
+}

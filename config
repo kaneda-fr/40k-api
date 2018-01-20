@@ -1,0 +1,4 @@
+/**
+* Config file for the API
+*/
+exports.db_url = 'mongodb://localhost/ludikraken-40k';
