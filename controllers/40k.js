@@ -5,11 +5,6 @@ var Match = require('../models/Match');*/
 const fs = require('fs');
 const swaggerMongoose = require('swagger-mongoose');
 
-// Create a token generator with the default settings:
-var randtoken = require('rand-token').generator({
-  chars: 'A-Z'
-});
-
 var swaggerDefinition = fs.readFileSync('./api/swagger.json');
 var models = swaggerMongoose.compile(swaggerDefinition).models
 var Joueur = models.joueur;
@@ -64,7 +59,7 @@ function joueurNomGET(req, res, next) {
    console.log("nom: " + nom);
 
 
-  Joueur.findOne({nom: nom}, { _id: 0, __v: 0}).exec(function (err, joueur) {
+  Joueur.findOne({nom: nom}, { _id: 0, __v: 0, fbuserid: 0, admin: 0, actif: 0}).exec(function (err, joueur) {
     if (err) {
       res.end();
       return handleError(err);
@@ -128,14 +123,6 @@ function joueurFBGET(req, res, next) {
     }
 
     console.log("Joueur: " + joueur );
-
-    if(joueur && !joueur.accessToken){
-      joueur.accessToken = randtoken.generate(32);
-      console.log('generating token ' + joueur.accessToken);
-      joueur.save(function (err, fluffy) {
-        if (err) return console.error(err);
-      });
-    }
 
     if (joueur) {
       res.setHeader('Content-Type', 'application/json');
@@ -300,21 +287,39 @@ function joueursGET(req, res, next) {
 
   // console.log(res.socket.parser.incoming.headers['x-fb-api-key']);
   // var accessToken = res.socket.parser.incoming.headers['x-fb-api-key'];
+  var accessToken = JSON.stringify(req.swagger.params['X-FB-API-Key'].value);
+  console.log("access Token: " + accessToken);
+  var userId = accessToken.split('----')[0].replace(/^"/, '');
 
-  var listeNoms = [];
-
-  Joueur.find({}, 'nom').exec(function (err, listeJoueurs) {
+  Joueur.findOne({fbuserid: userId, actif: true}).exec(function (err, joueur) {
     if (err) {
       res.end();
       return handleError(err);
     }
 
-    for (var key in listeJoueurs) {
-      listeNoms.push(listeJoueurs[key].nom);
+    if (joueur !== null){
+      var listeNoms = [];
+      Joueur.find({}, 'nom').exec(function (err, listeJoueurs) {
+        if (err) {
+          res.end();
+          return handleError(err);
+        }
+
+        for (var key in listeJoueurs) {
+          listeNoms.push(listeJoueurs[key].nom);
+        }
+        console.log("Liste Joueurs:" + listeNoms);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(listeNoms|| {}, null, 2));
+      })
+    } else {
+      console.log('Utilisateur ' + userId + ' non trouve ou innactif');
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({code: -1, message: 'UserId inconnu ou desactivé'}));
     }
-    console.log("Liste Joueurs:" + listeNoms);
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(listeNoms|| {}, null, 2));
+
+
+
   })
 }
 

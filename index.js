@@ -32,6 +32,7 @@ db.on('reconnected', function () {
 
 mongoose.connect(config.db_url, {server: {auto_reconnect: true}});
 
+var FB = require('fb');
 
 // swaggerRouter configuration
 var options = {
@@ -56,11 +57,26 @@ swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
       // your security code
       console.log('scopesOrApiKey ' + scopesOrApiKey);
       console.log('authOrSecDef ' + JSON.stringify(authOrSecDef));
-      if ('1234' === scopesOrApiKey) {
-        cb();
-      } else {
-        cb(new Error('access denied!'));
-      }
+
+      var userId = scopesOrApiKey.split('----')[0];
+      var fbToken = scopesOrApiKey.split('----')[1];
+      FB.setAccessToken(fbToken);
+      FB.api('/me', { fields: ['id'] }, function (res) {
+        if(!res || res.error) {
+          console.log(!res ? 'error occurred' : res.error);
+          cb(new Error(!res ? 'error occurred' : res.error));
+          return;
+        }
+
+        console.log('id: ' + res.id);
+        if (res.id === userId){
+            cb();
+        } else {
+          cb(new Error('FB userID mismatch: ' + userId + ' -- ' + res.id));
+        }
+
+        //console.log('name: ' + res.name);
+      });
     }
   }));
 
