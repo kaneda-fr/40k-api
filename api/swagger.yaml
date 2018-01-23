@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
   description: API for 40k ranking
-  version: 0.0.7
+  version: 0.0.9
   title: 40k API
 host: hackedo.io
 basePath: /40k/api
@@ -13,7 +13,7 @@ produces:
 securityDefinitions:
   FBApiKeyAuth:
     type: apiKey
-    in: query
+    in: header
     name: X-FB-API-Key
 paths:
   /classement:
@@ -97,12 +97,6 @@ paths:
         - application/json
       security:
          - FBApiKeyAuth: []
-      parameters:
-        - name: X-FB-API-Key
-          in: query
-          type: string
-          description: FB token
-          required: true
       responses:
         '200':
           description: show all player
@@ -258,6 +252,9 @@ definitions:
       formatPartie:
         type: string
         description: format de la partie
+      type:
+        type: string
+        description: type de match
       scenario:
         type: string
         description: nom du scenario joue

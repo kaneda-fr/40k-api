@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "API for 40k ranking",
-    "version": "0.0.7",
+    "version": "0.0.9",
     "title": "40k API"
   },
   "host": "hackedo.io",
@@ -17,7 +17,7 @@
   "securityDefinitions": {
     "FBApiKeyAuth": {
       "type": "apiKey",
-      "in": "query",
+      "in": "header",
       "name": "X-FB-API-Key"
     }
   },
@@ -143,15 +143,6 @@
         "security": [
           {
             "FBApiKeyAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "X-FB-API-Key",
-            "in": "query",
-            "type": "string",
-            "description": "FB token",
-            "required": true
           }
         ],
         "responses": {
@@ -380,6 +371,10 @@
         "formatPartie": {
           "type": "string",
           "description": "format de la partie"
+        },
+        "type": {
+          "type": "string",
+          "description": "type de match"
         },
         "scenario": {
           "type": "string",

@@ -33,6 +33,7 @@ db.on('reconnected', function () {
 mongoose.connect(config.db_url, {server: {auto_reconnect: true}});
 
 var FB = require('fb');
+FB.options({version: 'v2.11'});
 
 // swaggerRouter configuration
 var options = {
@@ -55,20 +56,26 @@ swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
   app.use(middleware.swaggerSecurity({
     FBApiKeyAuth: function (req, authOrSecDef, scopesOrApiKey, cb) {
       // your security code
-      console.log('scopesOrApiKey ' + scopesOrApiKey);
-      console.log('authOrSecDef ' + JSON.stringify(authOrSecDef));
+      // console.log('scopesOrApiKey ' + scopesOrApiKey);
+      // console.log('authOrSecDef ' + JSON.stringify(authOrSecDef));
+
+      if (scopesOrApiKey === undefined) {
+        cb(new Error('Missing API Authentication Header'));
+        return;
+      }
 
       var userId = scopesOrApiKey.split('----')[0];
       var fbToken = scopesOrApiKey.split('----')[1];
+      // console.log('Id: ' + userId);
+      // console.log('Token: ' + fbToken);
       FB.setAccessToken(fbToken);
-      FB.api('/me', { fields: ['id'] }, function (res) {
+      FB.api('me', { fields: ['id'] }, function (res) {
         if(!res || res.error) {
           console.log(!res ? 'error occurred' : res.error);
           cb(new Error(!res ? 'error occurred' : res.error));
           return;
         }
-
-        console.log('id: ' + res.id);
+        
         if (res.id === userId){
             cb();
         } else {

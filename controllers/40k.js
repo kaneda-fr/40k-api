@@ -31,7 +31,7 @@ function classementGET(req, res, next) {
      });
    })
 */
-   Joueur.find({}, { _id: 0, __v: 0 }).sort( { classement: 1 } ).exec(function (err, joueur) {
+   Joueur.find({}, { _id: 0, __v: 0 }).sort('classement').exec(function (err, joueur) {
      if (err) {
        res.end();
        return handleError(err);
@@ -75,33 +75,51 @@ function joueurNomGET(req, res, next) {
   })
 }
 
-function joueurPUT(args, res, next) {
+function joueurPUT(req, res, next) {
   /**
   * return a player by id
   *
   * joueur Joueur details du joueur
   * returns joueur
   **/
-  var examples = {};
-  examples['application/json'] = {
-    "armee" : "aeiou",
-    "fbname" : "aeiou",
-    "fbuserid" : "aeiou",
-    "classement" : 0,
-    "parties" : 6,
-    "admin" : true,
-    "datecreation" : "2000-01-23T04:56:07.000+00:00",
-    "actif" : true,
-    "nom" : "aeiou",
-    "email" : "aeiou",
-    "points" : 1
-  };
-  if (Object.keys(examples).length > 0) {
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(examples[Object.keys(examples)[0]] || {}, null, 2));
-  } else {
-    res.end();
-  }
+
+
+  const data = req.swagger.params.joueur.value;
+  console.log(JSON.stringify(data));
+
+  Joueur.findOne({fbuserid: data.fbuserid}).exec(function (err, joueur) {
+    if (err) {
+      res.end();
+      return handleError(err);
+    }
+    //console.log("Joueur: " + joueur);
+
+    if (joueur) {
+      // Modification Joueur
+      console.log('Update update');
+
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(joueur|| {}, null, 2));
+    } else {
+      // Creation Joueur
+      console.log('Creation Joueur');
+
+      Joueur.findOne()
+      .sort('-classement')  // give me the max
+      .exec(function (err, dernierJoueur) {
+        var newJoueur = new Joueur(data);
+        newJoueur.admin = false;
+        newJoueur.actif = false;
+        newJoueur.datecreation = new Date();
+        newJoueur.parties = 0;
+        newJoueur.classement = dernierJoueur.classement + 1;
+
+        newJoueur.save(function (err, fluffy) {
+          if (err) return console.error(err);
+        });
+      });
+    }
+  });
 }
 
 function joueurFBGET(req, res, next) {
@@ -174,6 +192,8 @@ function XXmatchPUT(req, res, next) {
    * date Date Date du match (optional)
    * returns match
    **/
+
+  console.log(req.swagger.params.body);
   var examples = {};
   examples['application/json'] = {
   "date" : "2000-01-23T04:56:07.000+00:00",
@@ -215,6 +235,10 @@ function matchPUT(req, res, next) {
    * tablerase Boolean Tour auquel la partie a ete gagne par table rase (optional)
    * returns match
    **/
+
+  console.log('match data:');
+  console.log(JSON.stringify(req.swagger.params.match.value));
+
   var examples = {};
   examples['application/json'] = {
   "date" : "2000-01-23T04:56:07.000+00:00",
@@ -285,9 +309,8 @@ function joueursGET(req, res, next) {
   **/
   console.log("joueursGET");
 
-  // console.log(res.socket.parser.incoming.headers['x-fb-api-key']);
-  // var accessToken = res.socket.parser.incoming.headers['x-fb-api-key'];
-  var accessToken = JSON.stringify(req.swagger.params['X-FB-API-Key'].value);
+  //console.log(res.socket.parser.incoming.headers['x-fb-api-key']);
+  var accessToken = res.socket.parser.incoming.headers['x-fb-api-key'];
   console.log("access Token: " + accessToken);
   var userId = accessToken.split('----')[0].replace(/^"/, '');
 
