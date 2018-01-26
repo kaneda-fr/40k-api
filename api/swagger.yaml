@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
   description: API for 40k ranking
-  version: 0.1.0
+  version: 0.1.1
   title: 40k API
 host: hackedo.io
 basePath: /40k/api
@@ -42,6 +42,18 @@ paths:
           schema:
             $ref: '#/definitions/Error'
       x-swagger-router-controller: 40k
+    put:
+      summary: calcule le classement
+      description: calcule le classement
+      operationId: classementPUT
+      produces:
+        - application/json
+      responses:
+        default:
+          description: Return operation message
+          schema:
+            $ref: '#/definitions/Error'
+      x-swagger-router-controller: 40k
   '/joueur/{nom}':
     get:
       summary: retourne un joueur
@@ -64,6 +76,7 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+      x-swagger-router-controller: 40k
     put:
       summary: met a jour un joueur
       description: Enregistre ou met à jour un joueur
@@ -93,6 +106,7 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+      x-swagger-router-controller: 40k
     delete:
       summary: supprime un joueur
       description: Enregistre ou met à jour un joueur
@@ -333,6 +347,9 @@ definitions:
       id:
         type: string
         description: Id du match
+      tournoi:
+        type: string
+        description: Nom du tournoi
       date:
         type: string
         format: date-time
@@ -382,6 +399,10 @@ definitions:
         description: Score du joueur
         minimum: 0
         default: 0
+      points:
+        type: integer
+        description: Nombre de points de l'armée du joueur
+        minimum: 1
       armee:
         type: string
         description: Armée du joueur
@@ -407,6 +428,10 @@ definitions:
       tablerase:
         type: boolean
         description: Joueur ayant eliminé l'armee adverse
+        default: false
+      abandon:
+        type: boolean
+        description: le joueur a concédé le match
         default: false
     required:
       - nom

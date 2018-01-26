@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "API for 40k ranking",
-    "version": "0.0.9",
+    "version": "0.1.1",
     "title": "40k API"
   },
   "host": "hackedo.io",
@@ -24,7 +24,7 @@
   "paths": {
     "/classement": {
       "get": {
-        "summary": "show board",
+        "summary": "retourne le classement",
         "description": "return the ranking board",
         "operationId": "classementGET",
         "produces": [
@@ -58,11 +58,29 @@
           }
         },
         "x-swagger-router-controller": "40k"
+      },
+      "put": {
+        "summary": "calcule le classement",
+        "description": "calcule le classement",
+        "operationId": "classementPUT",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "default": {
+            "description": "Return operation message",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "x-swagger-router-controller": "40k"
       }
     },
     "/joueur/{nom}": {
       "get": {
-        "description": "return a player by id",
+        "summary": "retourne un joueur",
+        "description": "retourne un joueur par id",
         "operationId": "joueurNomGET",
         "produces": [
           "application/json"
@@ -91,10 +109,9 @@
           }
         },
         "x-swagger-router-controller": "40k"
-      }
-    },
-    "/joueur": {
+      },
       "put": {
+        "summary": "met a jour un joueur",
         "description": "Enregistre ou met à jour un joueur",
         "operationId": "joueurPUT",
         "produces": [
@@ -106,6 +123,13 @@
           }
         ],
         "parameters": [
+          {
+            "name": "nom",
+            "in": "path",
+            "description": "nom du joueur",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "joueur",
             "in": "body",
@@ -131,11 +155,46 @@
           }
         },
         "x-swagger-router-controller": "40k"
+      },
+      "delete": {
+        "summary": "supprime un joueur",
+        "description": "Enregistre ou met à jour un joueur",
+        "operationId": "joueurDEL",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "FBApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "nom",
+            "in": "path",
+            "description": "nom du joueur",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion ok"
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "x-swagger-router-controller": "40k"
       }
     },
     "/joueurs": {
       "get": {
-        "description": "return list of all players",
+        "summary": "retourne la liste des joueurs",
+        "description": "retourne la liste des joueurs",
         "operationId": "joueursGET",
         "produces": [
           "application/json"
@@ -167,10 +226,16 @@
     },
     "/joueurfb/{userid}": {
       "get": {
-        "description": "return a player by fb userid",
+        "summary": "retourne un joueur",
+        "description": "retourne la liste des joueurs par fb userid",
         "operationId": "joueurFBGET",
         "produces": [
           "application/json"
+        ],
+        "security": [
+          {
+            "FBApiKeyAuth": []
+          }
         ],
         "parameters": [
           {
@@ -200,15 +265,20 @@
     },
     "/match": {
       "get": {
-        "description": "return list of match",
+        "summary": "retourne la liste des matchs",
+        "description": "retourne la liste de tous les matchs",
         "operationId": "matchGET",
+        "security": [
+          {
+            "FBApiKeyAuth": []
+          }
+        ],
         "produces": [
           "application/json"
         ],
-        "parameters": [],
         "responses": {
           "200": {
-            "description": "list des matchs",
+            "description": "liste des matchs",
             "schema": {
               "type": "array",
               "items": {
@@ -226,7 +296,8 @@
         "x-swagger-router-controller": "40k"
       },
       "put": {
-        "description": "record a match",
+        "summary": "enregistre un match",
+        "description": "enregistre un match",
         "operationId": "matchPUT",
         "security": [
           {
@@ -261,10 +332,93 @@
         "x-swagger-router-controller": "40k"
       }
     },
-    "/matchjoueur/{nom}": {
+    "/match/{id}": {
       "get": {
-        "description": "return list of match for a player",
-        "operationId": "matchjoueurNomGET",
+        "summary": "retourne un match par id",
+        "description": "retourne un match",
+        "operationId": "matchIdGET",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "FBApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id de la partie",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "list des matchs",
+            "schema": {
+              "$ref": "#/definitions/match"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "x-swagger-router-controller": "40k"
+      },
+      "put": {
+        "summary": "met a jour un match",
+        "description": "met a jour les données d'un match",
+        "operationId": "matchIdPUT",
+        "security": [
+          {
+            "FBApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id de la partie",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "match",
+            "in": "body",
+            "description": "details de la partie",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "retourne le match",
+            "schema": {
+              "$ref": "#/definitions/match"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "x-swagger-router-controller": "40k"
+      }
+    },
+    "/matchJoueur/{nom}": {
+      "get": {
+        "summary": "retourne la liste des matchs d'un joueur",
+        "description": "Liste de match joués par un joueur",
+        "operationId": "matchJoueurNomGET",
         "produces": [
           "application/json"
         ],
@@ -324,11 +478,13 @@
         },
         "admin": {
           "type": "boolean",
-          "description": "indique si le joueur est admin"
+          "description": "indique si le joueur est admin",
+          "default": false
         },
         "actif": {
           "type": "boolean",
-          "description": "indique si le compte est actif"
+          "description": "indique si le compte est actif",
+          "default": false
         },
         "datecreation": {
           "type": "string",
@@ -348,7 +504,11 @@
           "type": "string",
           "description": "Nom du joueur dans FB"
         }
-      }
+      },
+      "required": [
+        "nom",
+        "armee"
+      ]
     },
     "match": {
       "type": "object",
@@ -357,16 +517,14 @@
           "type": "string",
           "description": "Id du match"
         },
+        "tournoi": {
+          "type": "string",
+          "description": "Nom du tournoi"
+        },
         "date": {
           "type": "string",
           "format": "date-time",
           "description": "Date du match"
-        },
-        "vainqueur": {
-          "$ref": "#/definitions/joueur"
-        },
-        "perdant": {
-          "$ref": "#/definitions/joueur"
         },
         "formatPartie": {
           "type": "string",
@@ -388,30 +546,6 @@
           "type": "integer",
           "description": "nombre de PL de la partie"
         },
-        "scorevainqueur": {
-          "type": "integer",
-          "description": "score du vainqueur"
-        },
-        "scoreperdant": {
-          "type": "integer",
-          "description": "score du perdant"
-        },
-        "briseurligne": {
-          "type": "string",
-          "description": "Joueur ayant score briseur de ligne"
-        },
-        "premiersang": {
-          "type": "string",
-          "description": "Joueur ayant score premier sang"
-        },
-        "seigneurguerre": {
-          "type": "string",
-          "description": "Joueur ayant score seigneur de guerre"
-        },
-        "tablerase": {
-          "type": "boolean",
-          "description": "la partie se termine par table rase"
-        },
         "derniertour": {
           "type": "integer",
           "description": "numero du dernier tour"
@@ -424,8 +558,83 @@
           "type": "string",
           "format": "date-time",
           "description": "Date d'entree du match"
+        },
+        "joueurs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/matchDetailJoueur"
+          }
         }
-      }
+      },
+      "required": [
+        "date",
+        "derniertour",
+        "dateentree",
+        "joueurentree"
+      ]
+    },
+    "matchDetailJoueur": {
+      "type": "object",
+      "properties": {
+        "nom": {
+          "type": "string",
+          "description": "Nom du joueur"
+        },
+        "score": {
+          "type": "integer",
+          "description": "Score du joueur",
+          "minimum": 0,
+          "default": 0
+        },
+        "points": {
+          "type": "integer",
+          "description": "Nombre de points de l'armée du joueur",
+          "minimum": 1
+        },
+        "armee": {
+          "type": "string",
+          "description": "Armée du joueur"
+        },
+        "equipe": {
+          "type": "string",
+          "description": "Nom de l'équipe du joueur"
+        },
+        "vainqueur": {
+          "type": "boolean",
+          "description": "Joueur ayant gagne la partie",
+          "default": false
+        },
+        "briseurdeligne": {
+          "type": "boolean",
+          "description": "Joueur ayant score briseur de ligne",
+          "default": false
+        },
+        "seigneurdeguerre": {
+          "type": "boolean",
+          "description": "Joueur ayant score seigneur de guerre",
+          "default": false
+        },
+        "premiersang": {
+          "type": "boolean",
+          "description": "Joueur ayant score premier sang",
+          "default": false
+        },
+        "tablerase": {
+          "type": "boolean",
+          "description": "Joueur ayant eliminé l'armee adverse",
+          "default": false
+        },
+        "abandon": {
+          "type": "boolean",
+          "description": "le joueur a concédé le match",
+          "default": false
+        }
+      },
+      "required": [
+        "nom",
+        "armee",
+        "points"
+      ]
     },
     "Error": {
       "type": "object",
@@ -440,7 +649,11 @@
         "fields": {
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "code",
+        "message"
+      ]
     }
   }
 }

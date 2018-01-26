@@ -9,7 +9,115 @@ var swaggerDefinition = fs.readFileSync('./api/swagger.json');
 var models = swaggerMongoose.compile(swaggerDefinition).models
 var Joueur = models.joueur;
 var Match = models.match;
+var matchDetailJoueur = models.matchDetailJoueur;
 var MyError = models.Error;
+
+var classement = require('../classement');
+
+function classementRun(){
+  console.log("Running ranking");
+  return Joueur.find().sort('datecreation').exec(function (err, joueurs) {
+    if (err) {
+      res.end();
+      return handleError(err);
+    }
+
+    // Ranking by order of player registration
+    var i=1;
+    for (let joueur of joueurs) {
+      joueur.classement = i++;
+      joueur.parties = 0;
+    }
+
+    return Match.find().sort('date').exec(function (err, matches) {
+      if (err) {
+        return {code: 400, message: err};
+      }
+
+      function findByName(joueur, index) {
+        return joueur.nom == this;
+      };
+
+      function findByRank(joueur, index) {
+        return joueur.classement == this;
+      };
+
+      function swapRank(joueurs, indexJ1, indexJ2) {
+        console.log("Swapping: " + joueurs[indexJ1].nom + " & " + joueurs[indexJ2].nom);
+        var c = joueurs[indexJ1].classement;
+        joueurs[indexJ1].classement = joueurs[indexJ2].classement;
+        joueurs[indexJ2].classement = c;
+      }
+
+      function displayRank(joueurs){
+        for(let joueur of joueurs){
+          console.log(joueur.classement+" " + joueur.nom);
+        }
+      }
+
+      displayRank(joueurs);
+
+      for (let match of matches) {
+        console.log(match.date + ": " +  (match.joueurs[0].vainqueur ? "V " : "") + match.joueurs[0].nom + "-" + match.joueurs[1].nom +  (match.joueurs[1].vainqueur ? " V" : ""));
+        var indexJ1 = joueurs.findIndex(findByName, (match.joueurs[0].nom));
+        var indexJ2 = joueurs.findIndex(findByName, (match.joueurs[1].nom));
+
+        joueurs[indexJ1].parties ++;
+        joueurs[indexJ2].parties ++;
+
+        if (match.joueurs[0].vainqueur === true){
+          if (joueurs[indexJ1].classement > joueurs[indexJ2].classement){
+            swapRank(joueurs, indexJ1, indexJ2);
+          } else if (joueurs[indexJ1].classement <= joueurs[indexJ2].classement) {
+            var indexJ3 = joueurs.findIndex(findByRank, joueurs[indexJ1].classement-1);
+            if (indexJ3 >= 0){
+              swapRank(joueurs, indexJ1, indexJ3);
+            }
+          }
+        }else if (match.joueurs[1].vainqueur === true) {
+          if (joueurs[indexJ2].classement > joueurs[indexJ1].classement){
+            swapRank(joueurs, indexJ1, indexJ2);
+          } else if (joueurs[indexJ2].classement <= joueurs[indexJ1].classement) {
+            var indexJ3 = joueurs.findIndex(findByRank, joueurs[indexJ2].classement-1);
+            if (indexJ3 >= 0){
+              swapRank(joueurs, indexJ2, indexJ3);
+            }
+          }
+        }
+
+      }
+
+      displayRank(joueurs);
+
+      /*joueurs[0].save(function (err, fluffy) {
+        console.log("Saving " + joueurs[0].nom);
+        if (err) return console.error(err);
+        console.log(fluffy.nom + " -- Saved");
+      });*/
+      for (let joueur of joueurs){
+        console.log("Saving " + joueur.nom);
+
+        joueur.save(function (err, fluffy) {
+          if (err) {
+             console.error(err);
+             return {code: 400, message: err};
+          }
+          console.log(fluffy.nom);
+        });
+      }
+
+      return {
+        code: 200,
+        message: "ranking completed",
+      };
+    });
+  });
+}
+
+function classementPUT(req, res, next) {
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(classementRun()|| {}, null, 2));
+}
 
 function classementGET(req, res, next) {
   /**
@@ -40,6 +148,7 @@ function classementGET(req, res, next) {
 
      if (joueur.length > 0) {
        res.setHeader('Content-Type', 'application/json');
+       res.setHeader('Access-Control-Allow-Origin', '*')
        res.end(JSON.stringify(joueur|| {}, null, 2));
      } else {
        res.end();
@@ -59,7 +168,7 @@ function joueurNomGET(req, res, next) {
    console.log("nom: " + nom);
 
 
-  Joueur.findOne({nom: nom}, { _id: 0, __v: 0, fbuserid: 0, admin: 0, actif: 0}).exec(function (err, joueur) {
+  Joueur.findOne({nom: nom}, { _id: 0, __v: 0, fbuserid: 0, fbname: 0, admin: 0, actif: 0}).exec(function (err, joueur) {
     if (err) {
       res.end();
       return handleError(err);
@@ -183,6 +292,7 @@ function matchGET(req, res, next) {
   })
 }
 
+
 function XXmatchPUT(req, res, next) {
   /**
    * record a match
@@ -237,9 +347,14 @@ function matchPUT(req, res, next) {
    **/
 
   console.log('match data:');
-  console.log(JSON.stringify(req.swagger.params.match.value));
+  //console.log(JSON.stringify(req.swagger.params.match.value));
+  var match = new Match(req.swagger.params.match.value);
+  console.log(JSON.stringify(match));
+  match.save(function (err, fluffy) {
+    if (err) return console.error(err);
+  });
 
-  var examples = {};
+  /*var examples = {};
   examples['application/json'] = {
   "date" : "2000-01-23T04:56:07.000+00:00",
   "vainqueur" : {
@@ -264,16 +379,16 @@ function matchPUT(req, res, next) {
   "premiersang" : "aeiou",
   "formatPartie" : "aeiou",
   "derniertour" : 7
-};
-  if (Object.keys(examples).length > 0) {
+};*/
+  if (Object.keys(match).length > 0) {
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(examples[Object.keys(examples)[0]] || {}, null, 2));
+    res.end(JSON.stringify(match[Object.keys(match)[0]] || {}, null, 2));
   } else {
     res.end();
   }
 }
 
-function matchjoueurNomGET(req, res, next) {
+function matchJoueurNomGET(req, res, next) {
   /**
    * return list of match for a player
    *
@@ -284,7 +399,7 @@ function matchjoueurNomGET(req, res, next) {
    var nom = req.swagger.params.nom.value;
      console.log("matchjoueurNomGET " + nom)
 
-   Match.find({$or:[{'vainqueur.nom': nom},{'perdant.nom': nom}]}, { _id: 0, __v: 0 }).sort( { date: 1 } ).exec(function (err, match) {
+   Match.find({joueurs: {$elemMatch: {nom: nom}}}, { _id: 0, __v: 0}).sort( { date: 1 } ).exec(function (err, match) {
      if (err) {
        res.end();
        return handleError(err);
@@ -351,11 +466,12 @@ function joueursGET(req, res, next) {
 // export the middleware function
 module.exports = {
   classementGET,
+  classementPUT,
   joueurNomGET,
   joueurPUT,
   matchGET,
   matchPUT,
-  matchjoueurNomGET,
+  matchJoueurNomGET,
   joueurFBGET,
-  joueursGET
+  joueursGET,
 };
