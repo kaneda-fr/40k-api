@@ -68,23 +68,32 @@ function classementRun(){
         if (match.joueurs[0].vainqueur === true){
           if (joueurs[indexJ1].classement > joueurs[indexJ2].classement){
             swapRank(joueurs, indexJ1, indexJ2);
-          } else if (joueurs[indexJ1].classement <= joueurs[indexJ2].classement) {
+          } else if (joueurs[indexJ1].classement < joueurs[indexJ2].classement) {
             var indexJ3 = joueurs.findIndex(findByRank, joueurs[indexJ1].classement-1);
-            if (indexJ3 >= 0){
+            if (indexJ3 >= 0) {
               swapRank(joueurs, indexJ1, indexJ3);
+            } else {
+              var indexJ3 = joueurs.findIndex(findByRank, joueurs[indexJ2].classement+1);
+              if (indexJ3 >= 0) {
+                swapRank(joueurs, indexJ2, indexJ3);
+              }
             }
           }
-        }else if (match.joueurs[1].vainqueur === true) {
+        } else if (match.joueurs[1].vainqueur === true) {
           if (joueurs[indexJ2].classement > joueurs[indexJ1].classement){
             swapRank(joueurs, indexJ1, indexJ2);
-          } else if (joueurs[indexJ2].classement <= joueurs[indexJ1].classement) {
+          } else if (joueurs[indexJ2].classement < joueurs[indexJ1].classement) {
             var indexJ3 = joueurs.findIndex(findByRank, joueurs[indexJ2].classement-1);
-            if (indexJ3 >= 0){
+            if (indexJ3 >= 0) {
               swapRank(joueurs, indexJ2, indexJ3);
+            } else {
+              var indexJ3 = joueurs.findIndex(findByRank, joueurs[indexJ1].classement+1);
+              if (indexJ3 >= 0) {
+                swapRank(joueurs, indexJ1, indexJ3);
+              }
             }
           }
         }
-
       }
 
       displayRank(joueurs);
@@ -276,7 +285,7 @@ function matchGET(req, res, next) {
 
   //args.nom.value
 
-  Match.find({}, { _id: 0, __v: 0 }).sort( { date: 1 } ).exec(function (err, match) {
+  Match.find({}, { _id: 0, __v: 0}).sort( { date: 1 } ).exec(function (err, match) {
     if (err) {
       res.end();
       return handleError(err);
@@ -291,33 +300,6 @@ function matchGET(req, res, next) {
     }
   })
 }
-
-
-function XXmatchPUT(req, res, next) {
-  /**
-   * record a match
-   *
-   * vainqueur String nom du vainqueur
-   * perdant String nom du perdant
-   * date Date Date du match (optional)
-   * returns match
-   **/
-
-  console.log(req.swagger.params.body);
-  var examples = {};
-  examples['application/json'] = {
-  "date" : "2000-01-23T04:56:07.000+00:00",
-  "vainqueur" : "aeiou",
-  "perdant" : "aeiou"
-};
-  if (Object.keys(examples).length > 0) {
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(examples[Object.keys(examples)[0]] || {}, null, 2));
-  } else {
-    res.end();
-  }
-}
-
 
 function matchPUT(req, res, next) {
   /**
@@ -350,8 +332,13 @@ function matchPUT(req, res, next) {
   //console.log(JSON.stringify(req.swagger.params.match.value));
   var match = new Match(req.swagger.params.match.value);
   console.log(JSON.stringify(match));
-  match.save(function (err, fluffy) {
+  match.save(function (err, match) {
     if (err) return console.error(err);
+    match.id = match._id;
+    match.save(function (err, match) {
+      if (err) return console.error(err);
+    });
+    classementRun();
   });
 
   /*var examples = {};
@@ -399,7 +386,7 @@ function matchJoueurNomGET(req, res, next) {
    var nom = req.swagger.params.nom.value;
      console.log("matchjoueurNomGET " + nom)
 
-   Match.find({joueurs: {$elemMatch: {nom: nom}}}, { _id: 0, __v: 0}).sort( { date: 1 } ).exec(function (err, match) {
+   Match.find({joueurs: {$elemMatch: {nom: nom}}}, { _id: 0, __v: 0}).sort( { date: 'desc' } ).exec(function (err, match) {
      if (err) {
        res.end();
        return handleError(err);
