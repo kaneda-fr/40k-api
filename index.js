@@ -55,31 +55,26 @@ swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
   // Provide the security handlers
   app.use(middleware.swaggerSecurity({
     FBApiKeyAuth: function (req, authOrSecDef, scopesOrApiKey, cb) {
-      // your security code
-      // console.log('scopesOrApiKey ' + scopesOrApiKey);
-      // console.log('authOrSecDef ' + JSON.stringify(authOrSecDef));
-
       if (scopesOrApiKey === undefined) {
-        cb(new Error('Missing API Authentication Header'));
+        cb({code: 1100, statusCode: 403, message: 'Missing API Key'});
         return;
       }
 
       var userId = scopesOrApiKey.split('----')[0];
       var fbToken = scopesOrApiKey.split('----')[1];
-      // console.log('Id: ' + userId);
-      // console.log('Token: ' + fbToken);
+
       FB.setAccessToken(fbToken);
       FB.api('me', { fields: ['id'] }, function (res) {
         if(!res || res.error) {
           console.log(!res ? 'error occurred' : res.error);
-          cb(new Error(!res ? 'error occurred' : res.error));
+          cb({code: !res.error ? 1101 : res.error.code, statusCode: 403, message: !res.error ? 'Facebook API Error' : res.error.message});
           return;
         }
-        
+
         if (res.id === userId){
             cb();
         } else {
-          cb(new Error('FB userID mismatch: ' + userId + ' -- ' + res.id));
+          cb({code: 1102, statusCode: 403, message: 'Facebook userID - OAuth Token mismatch'});
         }
 
         //console.log('name: ' + res.name);
@@ -90,6 +85,18 @@ swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
   // Validate Swagger requests
   app.use(middleware.swaggerValidator());
 
+  app.use(function (err, req, res, next) {
+    console.log("Error Handler " + JSON.stringify(err));
+    res.end(JSON.stringify({
+      code: err.code,
+      message: !err.message ? 'Error Occured' : err.message,
+    }));
+  /* if (err.message === 'Failed to authenticate') {
+    err.message = 'Custom error for Juho: ' + err.message;
+  }*/
+
+  next(err);
+  });
   // Route validated requests to appropriate controller
   app.use(middleware.swaggerRouter(options));
 
