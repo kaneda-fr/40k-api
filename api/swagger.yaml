@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
   description: API for 40k ranking
-  version: 0.1.1
+  version: 0.1.2
   title: 40k API
 host: hackedo.io
 basePath: /40k/api
@@ -326,7 +326,7 @@ definitions:
         default: false
       datecreation:
         type: string
-        format: datetime
+        format: dateTime
         description: date de creation du joueur
       points:
         type: integer
@@ -352,7 +352,7 @@ definitions:
         description: Nom du tournoi
       date:
         type: string
-        format: datetime
+        format: dateTime
         description: Date du match
       formatPartie:
         type: string
@@ -377,7 +377,7 @@ definitions:
         description: nom du joueur qui a entre le match
       dateentree:
         type: string
-        format: datetime
+        format: dateTime
         description: Date d'entree du match
       joueurs:
         type: array

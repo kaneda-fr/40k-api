@@ -488,7 +488,7 @@
         },
         "datecreation": {
           "type": "string",
-          "format": "datetime",
+          "format": "dateTime",
           "description": "date de creation du joueur"
         },
         "points": {
@@ -523,7 +523,7 @@
         },
         "date": {
           "type": "string",
-          "format": "datetime",
+          "format": "dateTime",
           "description": "Date du match"
         },
         "formatPartie": {
@@ -556,7 +556,7 @@
         },
         "dateentree": {
           "type": "string",
-          "format": "datetime",
+          "format": "dateTime",
           "description": "Date d'entree du match"
         },
         "joueurs": {
