@@ -87,6 +87,8 @@ swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
 
   app.use(function (err, req, res, next) {
     console.log("Error Handler " + JSON.stringify(err));
+
+    res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({
       code: err.code,
       message: !err.message ? 'Error Occured' : err.message,
