@@ -76,28 +76,38 @@ function classementRun(){
 
         if (match.joueurs[0].vainqueur === true){
           if (joueurs[indexJ1].classement > joueurs[indexJ2].classement){
+            // winner ranking lower than looser, swap position
             swapRank(joueurs, indexJ1, indexJ2);
           } else if (joueurs[indexJ1].classement < joueurs[indexJ2].classement) {
+            // winner ranking is higher than looser, winner gain one position, looser lose one position
             var indexJ3 = joueurs.findIndex(findByRank, joueurs[indexJ1].classement-1);
             if (indexJ3 >= 0) {
+              // Winner gain one position
               swapRank(joueurs, indexJ1, indexJ3);
             } else {
+              // Winner is already top of teh board, looser looses one position
               var indexJ3 = joueurs.findIndex(findByRank, joueurs[indexJ2].classement+1);
-              if (indexJ3 >= 0) {
+              // TODO check if player not already the last
+              // TODO ensure player below was created before match too place
+              if (indexJ3 >= 0 && joueurs[indexJ3].datecreation > match.date) {
                 swapRank(joueurs, indexJ2, indexJ3);
               }
             }
           }
         } else if (match.joueurs[1].vainqueur === true) {
           if (joueurs[indexJ2].classement > joueurs[indexJ1].classement){
+            // winner ranking lower than looser, swap position
             swapRank(joueurs, indexJ1, indexJ2);
           } else if (joueurs[indexJ2].classement < joueurs[indexJ1].classement) {
+            // winner ranking is higher than looser, winner gain one position
             var indexJ3 = joueurs.findIndex(findByRank, joueurs[indexJ2].classement-1);
             if (indexJ3 >= 0) {
+              // Winner gain one position
               swapRank(joueurs, indexJ2, indexJ3);
             } else {
+              // Winner is already top of teh board, looser looses one position
               var indexJ3 = joueurs.findIndex(findByRank, joueurs[indexJ1].classement+1);
-              if (indexJ3 >= 0) {
+              if (indexJ3 >= 0 && joueurs[indexJ3].datecreation > match.date) {
                 swapRank(joueurs, indexJ1, indexJ3);
               }
             }
